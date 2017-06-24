@@ -22,7 +22,7 @@ from magenta.models.melody_rnn import melody_rnn_model
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string(
     'melody_config',
-    'basic_rnn',
+    None,
     "Which config to use. Must be one of 'basic', 'lookback', or 'attention'. "
     "Mutually exclusive with `--melody_encoder_decoder`.")
 tf.app.flags.DEFINE_string(
@@ -41,7 +41,7 @@ tf.app.flags.DEFINE_string(
     'A description of the generator. Overrides the default if `--config` is '
     'also supplied.')
 tf.app.flags.DEFINE_string(
-    'melody_hparams', '{}',
+    'melody_hparams', '',
     'String representation of a Python dictionary containing hyperparameter '
     'to value mapping. This mapping is merged with the default '
     'hyperparameters if `--config` is also supplied.')
@@ -125,7 +125,7 @@ def config_from_flags():
       generator_details = None
     encoder_decoder = melody_encoder_decoders[FLAGS.melody_encoder_decoder](
         melody_rnn_model.DEFAULT_MIN_NOTE, melody_rnn_model.DEFAULT_MAX_NOTE)
-    hparams = magenta.common.HParams()
+    hparams = tf.contrib.training.HParams()
     hparams.parse(FLAGS.melody_hparams)
     return melody_rnn_model.MelodyRnnConfig(
         generator_details, encoder_decoder, hparams)

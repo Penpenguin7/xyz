@@ -12,7 +12,7 @@ import tensorflow as tf
 import magenta
 from magenta.music import constants, drums_lib, melodies_lib
 from magenta.pipelines import pipeline, dag_pipeline, pipelines_common, drum_pipelines, melody_pipelines
-from magenta.models.modified_drums_rnn import drums_rnn_config_flags
+from magenta.models.drums_rnn import drums_rnn_config_flags
 from magenta.models.modified_drums_rnn import melody_rnn_config_flags
 from magenta.protobuf import music_pb2
 from magenta.common import sequence_example_lib
@@ -85,7 +85,6 @@ class ComboEncoderPipeline(pipeline.Pipeline):
         self._melody_max_note = melody_config.max_note
         self._melody_transpose_to_key = melody_config.transpose_to_key
     def transform(self, combo):
-        print 'I got here'
         combo['melody'].squash(
         self._melody_min_note,
         self._melody_max_note,
