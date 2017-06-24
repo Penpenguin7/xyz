@@ -22,7 +22,7 @@ from magenta.models.modified_drums_rnn import melody_rnn_model
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string(
     'melody_config',
-    'basic_rnn',
+    None,
     "Which config to use. Must be one of 'basic', 'lookback', or 'attention'. "
     "Mutually exclusive with `--melody_encoder_decoder`.")
 tf.app.flags.DEFINE_string(

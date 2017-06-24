@@ -19,12 +19,12 @@ import os
 import tensorflow as tf
 
 import magenta
-from magenta.models.drums_rnn import drums_rnn_config_flags
+from magenta.models.modified_drums_rnn import drums_rnn_config_flags
 from magenta.models.shared import events_rnn_graph
 from magenta.models.shared import events_rnn_train
 
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_string('run_dir', '/tmp/drums_rnn/logdir/run1',
+tf.app.flags.DEFINE_string('run_dir', '/tmp/modified_drums_rnn/logdir/run1',
                            'Path to the directory where checkpoints and '
                            'summary events will be saved during training and '
                            'evaluation. Separate subdirectories for training '
@@ -33,7 +33,7 @@ tf.app.flags.DEFINE_string('run_dir', '/tmp/drums_rnn/logdir/run1',
                            'parent directory of `run_dir`. Point TensorBoard '
                            'to the parent directory of `run_dir` to see all '
                            'your runs.')
-tf.app.flags.DEFINE_string('sequence_example_file', '',
+tf.app.flags.DEFINE_string('sequence_example_file', '/home/duong/magenta_experiment/melody_dataset/training_melodies.tfrecord',
                            'Path to TFRecord file containing '
                            'tf.SequenceExample records for training or '
                            'evaluation. A filepattern may also be provided, '
