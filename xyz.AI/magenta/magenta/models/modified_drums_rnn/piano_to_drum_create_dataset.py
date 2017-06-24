@@ -10,17 +10,16 @@ import time
 
 import tensorflow as tf
 import magenta
-from magenta.music import constants, drums_lib, melodies_lib
+import magenta.music as mm
+from magenta.music import constants, drums_lib
 from magenta.pipelines import pipeline, dag_pipeline, pipelines_common, drum_pipelines, melody_pipelines
-from magenta.models.modified_drums_rnn import drums_rnn_config_flags
-from magenta.models.modified_drums_rnn import melody_rnn_config_flags
 from magenta.protobuf import music_pb2
 from magenta.common import sequence_example_lib
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string('input', '/home/duong/magenta_experiment/'+
                            'convert_dir_to_note_sequence/output/complex.tfrecord',
                            'TFRecord to read NoteSequence protos from.')
-tf.app.flags.DEFINE_string('output_dir', '/home/duong/magenta_experiment/',
+tf.app.flags.DEFINE_string('output_dir', '/home/duong/magenta_experiment/create_dataset_output/',
                            'Directory to write training and eval TFRecord '
                            'files. The TFRecord files are populated with '
                            'SequenceExample protos.')
@@ -41,7 +40,7 @@ class Combo(dict):
 
 
 def align_drum_and_melody_tracks(drum_track, melody_track):
-    new_drum_track = magenta.music.DrumTrack()
+    new_drum_track = drums_lib.DrumTrack()
     j = 0
     for i in range(len(melody_track)):
         if melody_track[i] == constants.MELODY_NO_EVENT and len(drum_track) > j:
@@ -63,45 +62,49 @@ class ComboExtractor(pipeline.Pipeline):
         self._melody_extractor = melody_extractor
 
     def transform(self, quantized_sequence):
-        melody_track = self._melody_extractor.transform(quantized_sequence)
-        drum_track = self._drum_extractor.transform(quantized_sequence)
-        new_drum_track = align_drum_and_melody_tracks(drum_track, melody_track)
-        return dict([('drum',new_drum_track), ('melody',melody_track)])
+        melody_tracks = self._melody_extractor.transform(quantized_sequence)
+        drum_tracks = self._drum_extractor.transform(quantized_sequence)
+        new_drum_tracks = [align_drum_and_melody_tracks(drum_tracks[i], melody_tracks[i])
+                           for i in range(min(len(melody_tracks), len(drum_tracks)))]
+        return dict([('drum',new_drum_tracks), ('melody',melody_tracks[0:len(new_drum_tracks)])])
 ## melody default parameters
 DEFAULT_MIN_NOTE = 48
 DEFAULT_MAX_NOTE  = 84
 DEFAULT_TRANSPOSE_TO_KEY = 0
 
 class ComboEncoderPipeline(pipeline.Pipeline):
-    def __init__(self, melody_config, drum_config, name):
+    def __init__(self, melody_encoder_decoder, drum_encoder_decoder, name,
+                 melody_min_note = DEFAULT_MIN_NOTE,
+                 melody_max_note = DEFAULT_MAX_NOTE,
+                 melody_transpose_to_key = DEFAULT_TRANSPOSE_TO_KEY):
         super(ComboEncoderPipeline, self).__init__(
         input_type=dict([('drum', magenta.music.DrumTrack), ('melody', magenta.music.Melody)]),
         output_type=tf.train.SequenceExample,
         name=name)
-        self._melody_encoder_decoder = melody_config.encoder_decoder
-        self._drum_encoder_decoder = drum_config.encoder_decoder
-        self._melody_min_note = melody_config.min_note
-        self._melody_max_note = melody_config.max_note
-        self._melody_transpose_to_key = melody_config.transpose_to_key
+        self._melody_encoder_decoder = melody_encoder_decoder
+        self._drum_encoder_decoder = drum_encoder_decoder
+        self._melody_min_note = melody_min_note
+        self._melody_max_note = melody_max_note
+        self._melody_transpose_to_key = melody_transpose_to_key
     def transform(self, combo):
-        print 'I got here'
+        #print 'I got here'
         combo['melody'].squash(
         self._melody_min_note,
         self._melody_max_note,
         self._melody_transpose_to_key)
-        return self.encode(combo['drum'], combo['melody'])
-    def encode(drum_track, melody_track):
+        return [self.encode(combo['drum'], combo['melody'])]
+    def encode(self,drum_track, melody_track):
         inputs = []
         labels = []
         assert len(drum_track) == len(melody_track)
         for i in range(len(melody_track)):
           inputs.append(self._melody_encoder_decoder.events_to_input(melody_track, i))
-          labels.append(self._drum_encoder_decoeder.events_to_label(drum_track, i))
+          labels.append(self._drum_encoder_decoder.events_to_label(drum_track, i))
         return sequence_example_lib.make_sequence_example(inputs, labels)
 
 
-def get_pipeline(melody_config, drum_config, eval_ratio):
-    assert melody_config.steps_per_quarter == drum_config.steps_per_quarter
+def get_pipeline(melody_encoder_decoder, drum_encoder_decoder, eval_ratio, steps_per_quarter = 2):
+    
     partitioner = pipelines_common.RandomPartition(
       music_pb2.NoteSequence,
       ['eval_combo_tracks', 'training_combo_tracks'],
@@ -111,7 +114,7 @@ def get_pipeline(melody_config, drum_config, eval_ratio):
         time_change_splitter = pipelines_common.TimeChangeSplitter(
             name='TimeChangeSplitter_' + mode)
         quantizer = pipelines_common.Quantizer(
-            steps_per_quarter=melody_config.steps_per_quarter, name='Quantizer_' + mode)
+            steps_per_quarter=steps_per_quarter, name='Quantizer_' + mode)
 
         drum_extractor = drum_pipelines.DrumsExtractor(
         min_bars=7, max_steps=512, gap_bars=1.0, name='DrumsExtractor_' + mode)
@@ -122,7 +125,7 @@ def get_pipeline(melody_config, drum_config, eval_ratio):
         name='MelodyExtractor_' + mode)
 
         combo_extractor = ComboExtractor(drum_extractor, melody_extractor, name = 'ComboExtractor_'+mode)
-        encoder_pipeline = ComboEncoderPipeline(melody_config, drum_config, name = 'EncoderPipeline_'+mode)
+        encoder_pipeline = ComboEncoderPipeline(melody_encoder_decoder, drum_encoder_decoder, name = 'EncoderPipeline_'+mode)
         #raise Exception(encoder_pipeline.input_size)
         #raise Exception(encoder_pipeline.input_type)
         #print (encoder_pipeline.input_type)
@@ -142,11 +145,18 @@ def main(unused_argv):
     #define the input & output necessary for melody config and drum config here
     tf.logging.set_verbosity(FLAGS.log)
 
-    melody_config = melody_rnn_config_flags.config_from_flags()
-    drum_config = drums_rnn_config_flags.config_from_flags()
+    melody_encoder_decoder =  magenta.music.OneHotEventSequenceEncoderDecoder(
+            magenta.music.MelodyOneHotEncoding(
+                min_note=DEFAULT_MIN_NOTE,
+                max_note=DEFAULT_MAX_NOTE))
+    drum_encoder_decoder =  magenta.music.OneHotEventSequenceEncoderDecoder(
+            magenta.music.MultiDrumOneHotEncoding([
+                [39] +  # use hand clap as default when decoding
+                range(mm.MIN_MIDI_PITCH, 39) +
+                range(39, mm.MAX_MIDI_PITCH + 1)]))
     
     pipeline_instance = get_pipeline(
-      melody_config, drum_config, FLAGS.eval_ratio)
+      melody_encoder_decoder, drum_encoder_decoder, FLAGS.eval_ratio)
     #print pipeline_instance.input_type, pipeline_instance.output_type
     #raise Exception('stop')
     FLAGS.input = os.path.expanduser(FLAGS.input)
