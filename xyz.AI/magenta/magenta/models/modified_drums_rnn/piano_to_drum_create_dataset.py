@@ -88,10 +88,6 @@ class ComboEncoderPipeline(pipeline.Pipeline):
         self._melody_max_note = melody_max_note
         self._melody_transpose_to_key = melody_transpose_to_key
     def transform(self, combo):
-<<<<<<< HEAD
-        #print 'I got here'
-=======
->>>>>>> 23fc41fc1abe67ac3ae78495957cd6f2901f6f72
         combo['melody'].squash(
         self._melody_min_note,
         self._melody_max_note,
