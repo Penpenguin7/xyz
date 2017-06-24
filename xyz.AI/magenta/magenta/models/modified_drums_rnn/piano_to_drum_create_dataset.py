@@ -15,6 +15,7 @@ from magenta.music import constants, drums_lib
 from magenta.pipelines import pipeline, dag_pipeline, pipelines_common, drum_pipelines, melody_pipelines
 from magenta.protobuf import music_pb2
 from magenta.common import sequence_example_lib
+
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string('input', '/home/duong/magenta_experiment/'+
                            'convert_dir_to_note_sequence/output/complex.tfrecord',
@@ -87,7 +88,10 @@ class ComboEncoderPipeline(pipeline.Pipeline):
         self._melody_max_note = melody_max_note
         self._melody_transpose_to_key = melody_transpose_to_key
     def transform(self, combo):
+<<<<<<< HEAD
         #print 'I got here'
+=======
+>>>>>>> 23fc41fc1abe67ac3ae78495957cd6f2901f6f72
         combo['melody'].squash(
         self._melody_min_note,
         self._melody_max_note,

@@ -30,7 +30,7 @@ py_library(
     srcs = ["drums_rnn_config_flags.py"],
     srcs_version = "PY2AND3",
     visibility = [
-        # internal model:drums_rnn
+        "//visibility:public",
     ],
     deps = [
         ":drums_rnn_model",

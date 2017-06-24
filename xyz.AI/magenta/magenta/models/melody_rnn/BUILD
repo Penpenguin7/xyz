@@ -33,7 +33,7 @@ py_library(
     srcs = ["melody_rnn_config_flags.py"],
     srcs_version = "PY2AND3",
     visibility = [
-        # internal model:melody_rnn
+        "//visibility:public",
     ],
     deps = [
         ":melody_rnn_model",
@@ -47,8 +47,7 @@ py_library(
     srcs = ["melody_rnn_model.py"],
     srcs_version = "PY2AND3",
     visibility = [
-        # internal model:melody_rnn
-        # internal notebook binary
+        "//visibility:public",
     ],
     deps = [
         "//magenta",
