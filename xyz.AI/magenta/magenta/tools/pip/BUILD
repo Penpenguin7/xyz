@@ -79,5 +79,8 @@ sh_binary(
         # NSynth
         "//magenta/models/nsynth/wavenet:nsynth_generate",
         "//magenta/models/nsynth/wavenet:nsynth_save_embeddings",
+
+        # Our project
+        "//magenta/models/modified_drums_rnn:piano_to_drum_create_dataset",
     ],
 )
