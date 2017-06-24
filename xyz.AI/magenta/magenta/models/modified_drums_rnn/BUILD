@@ -16,174 +16,6 @@
 
 licenses(["notice"])  # Apache 2.0
 
-py_library(
-    name = "drums_rnn",
-    srcs = ["__init__.py"],
-    visibility = ["//magenta/tools/pip:__subpackages__"],
-    deps = [
-	"//magenta",
-        ":drums_rnn_model",
-    ],
-)
-
-py_library(
-    name = "drums_rnn_config_flags",
-    srcs = ["drums_rnn_config_flags.py"],
-    srcs_version = "PY2AND3",
-    visibility = [
-        # internal model:drums_rnn
-    ],
-    deps = [
-        ":drums_rnn_model",
-        # tensorflow dep
-    ],
-)
-
-py_library(
-    name = "drums_rnn_model",
-    srcs = ["drums_rnn_model.py"],
-    srcs_version = "PY2AND3",
-    deps = [
-        "//magenta",
-        "//magenta/models/shared:events_rnn_model",
-    ],
-)
-
-py_library(
-    name = "drums_rnn_sequence_generator",
-    srcs = ["drums_rnn_sequence_generator.py"],
-    srcs_version = "PY2AND3",
-    visibility = ["//magenta/interfaces:generator_interfaces"],
-    deps = [
-        ":drums_rnn_model",
-        "//magenta",
-    ],
-)
-py_library(
-    name = "melody_rnn_config_flags",
-    srcs = ["melody_rnn_config_flags.py"],
-    srcs_version = "PY2AND3",
-    visibility = [
-        # internal model:drums_rnn
-    ],
-    deps = [
-        ":melody_rnn_model",
-        "//magenta",
-        # tensorflow dep
-    ],
-)
-
-py_library(
-    name = "melody_rnn_model",
-    srcs = ["melody_rnn_model.py"],
-    srcs_version = "PY2AND3",
-    deps = [
-        "//magenta",
-        "//magenta/models/shared:events_rnn_model",
-    ],
-)
-py_library(
-    name = "drums_lib",
-    srcs = ["drums_lib.py"],
-    srcs_version = "PY2AND3",
-    visibility = [
-        # internal model:drums_rnn
-    ],
-    deps = [
-        "//magenta/music:constants",
-        "//magenta/music:events_lib",
-        "//magenta/music:midi_io",
-        "//magenta/music:sequences_lib",
-        "//magenta/pipelines:statistics",
-        "//magenta/protobuf:music_py_pb2",
-    ],
-)
-
-py_library(
-    name = "melodies_lib",
-    srcs = ["melodies_lib.py"],
-    srcs_version = "PY2AND3",
-    visibility = [
-        # internal model:drums_rnn
-    ],
-    deps = [
-        "//magenta/music:constants",
-        "//magenta/music:events_lib",
-        "//magenta/music:midi_io",
-        "//magenta/music:sequences_lib",
-        "//magenta/pipelines:statistics",
-        "//magenta/protobuf:music_py_pb2",
-    ],
-)
-py_binary(
-    name = "drums_rnn_create_dataset",
-    srcs = ["drums_rnn_create_dataset.py"],
-    srcs_version = "PY2AND3",
-    visibility = [
-        # internal model:drums_rnn
-        "//magenta/tools/pip:__subpackages__",
-    ],
-    deps = [
-        ":drums_rnn_config_flags",
-        "//magenta",
-        # tensorflow dep
-    ],
-)
-
-py_test(
-    name = "drums_rnn_create_dataset_test",
-    srcs = ["drums_rnn_create_dataset_test.py"],
-    deps = [
-        ":drums_rnn_create_dataset",
-        "//magenta",
-        "//magenta/models/shared:events_rnn_model",
-        # tensorflow dep
-    ],
-)
-
-py_binary(
-    name = "drums_rnn_train",
-    srcs = ["drums_rnn_train.py"],
-    srcs_version = "PY2AND3",
-    visibility = [
-        "//magenta/tools/pip:__subpackages__",
-    ],
-    deps = [
-        ":drums_rnn_config_flags",
-        "//magenta/models/shared:events_rnn_graph",
-        "//magenta/models/shared:events_rnn_train",
-        # tensorflow dep
-    ],
-)
-
-py_binary(
-    name = "drums_rnn_generate",
-    srcs = ["drums_rnn_generate.py"],
-    srcs_version = "PY2AND3",
-    visibility = [
-        "//magenta/tools/pip:__subpackages__",
-    ],
-    deps = [
-        ":drums_rnn_config_flags",
-        ":drums_rnn_model",
-        ":drums_rnn_sequence_generator",
-        "//magenta",
-        # tensorflow dep
-    ],
-)
-
-py_binary(
-	name = "extract_drums_script",
-	srcs = ["extract_drums_script.py"],
-	visibility = [
-        "//magenta/tools/pip:__subpackages__",
-    ],
-    deps = [
-	"//magenta",
-	":drums_lib",
-	":melodies_lib",
-	],
-)
 py_binary(
 	name = "piano_to_drum_create_dataset",
 	srcs = ["piano_to_drum_create_dataset.py"],
@@ -192,10 +24,24 @@ py_binary(
     ],
     deps = [
 	"//magenta",
-	"//magenta/music",
-	"//magenta/pipelines",
-	":melody_rnn_config_flags",
-	":drums_rnn_config_flags",
+    "//magenta/models/drums_rnn:drums_rnn_config_flags",
+    "//magenta/music",
+    "//magenta/pipelines",
+    ":melody_rnn_config_flags",
 	],
+)
+
+py_library(
+    name = "melody_rnn_config_flags",
+    srcs = ["melody_rnn_config_flags.py"],
+    srcs_version = "PY2AND3",
+    visibility = [
+        # internal model:drums_rnn
+    ],
+    deps = [
+        "//magenta/models/melody_rnn:melody_rnn_model",
+        "//magenta",
+        # tensorflow dep
+    ],
 )
 

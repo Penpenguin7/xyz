@@ -12,8 +12,8 @@ import tensorflow as tf
 import magenta
 from magenta.music import constants, drums_lib
 from magenta.pipelines import pipeline, pipelines_common, drum_pipelines, melody_pipelines
-from magenta.models.modified_drums_rnn import drums_rnn_config_flags
-from magenta.models.modified_drums_rnn import melody_rnn_config_flags
+from magenta.models.drums_rnn import drums_rnn_config_flags
+import melody_rnn_config_flags
 
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string('input', '/home/duong/magenta_experiment/'+
@@ -148,3 +148,9 @@ def main(unused_argv):
       pipeline_instance,
       pipeline.tf_record_iterator(FLAGS.input, pipeline_instance.input_type),
       FLAGS.output_dir)
+
+def console_entry_point():
+    tf.app.run(main)
+
+if __name__ == '__main__':
+    console_entry_point()
